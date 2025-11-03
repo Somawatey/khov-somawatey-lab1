@@ -15,11 +15,25 @@
     "chai": "4",
     "eslint": "8",
     "mocha": "^11.7.4",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "nyc": "^15.1.0"
   },
   "scripts": {
     "start": "node server.js",
     "test": "mocha --exit",
-    "lint": "eslint . --ext .js"
+    "lint": "eslint . --ext .js",
+    "coverage": "nyc --reporter=lcov --reporter=text mocha --exit",
+    "coverage:report": "nyc report --reporter=text --reporter=lcov"
+  }
+  ,
+  "nyc": {
+    "exclude": [
+      "test"
+    ],
+    "reporter": [
+      "lcov",
+      "text"
+    ],
+    "all": true
   }
 }
