@@ -42,6 +42,7 @@ jobs:
           path: |
             coverage/lcov.info
             coverage
+          overwrite: true
 
   deploy:
     needs: build-and-test
