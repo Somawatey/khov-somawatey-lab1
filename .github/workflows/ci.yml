@@ -68,5 +68,25 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           echo "Deploying application..."
-          npx vercel deploy --token "${VERCEL_TOKEN}" --prod --yes \
-            --org "${VERCEL_ORG_ID}" --project "${VERCEL_PROJECT_ID}"
+          if [ -z "${VERCEL_TOKEN}" ]; then
+            echo "ERROR: VERCEL_TOKEN is not set. Set the secret VERCEL_TOKEN in repository secrets." >&2
+            exit 1
+          fi
+
+          # If PROJECT_ID is provided, require ORG_ID as well
+          if [ -n "${VERCEL_PROJECT_ID}" ] && [ -z "${VERCEL_ORG_ID}" ]; then
+            echo "ERROR: VERCEL_PROJECT_ID is set but VERCEL_ORG_ID is missing. Set both or remove VERCEL_PROJECT_ID." >&2
+            exit 1
+          fi
+
+          # If both IDs provided, link to the existing project first, then deploy
+          if [ -n "${VERCEL_ORG_ID}" ] && [ -n "${VERCEL_PROJECT_ID}" ]; then
+            echo "Linking to existing Vercel project (org=${VERCEL_ORG_ID}, project=${VERCEL_PROJECT_ID})..."
+            npx --yes vercel link --token "${VERCEL_TOKEN}" --org "${VERCEL_ORG_ID}" --project "${VERCEL_PROJECT_ID}" || true
+            echo "Deploying to production..."
+            npx --yes vercel --token "${VERCEL_TOKEN}" --prod --yes
+          else
+            # No IDs provided — deploy by name or let Vercel infer project
+            echo "No org/project IDs provided — deploying (Vercel may auto-create or use linked project)..."
+            npx --yes vercel --token "${VERCEL_TOKEN}" --prod --yes
+          fi
