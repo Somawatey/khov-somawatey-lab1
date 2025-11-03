@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [16.x, 18.x]
+        # express@5 requires Node >= 18 — test against 18 and 20 (current LTS)
+        node-version: [18.x, 20.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
