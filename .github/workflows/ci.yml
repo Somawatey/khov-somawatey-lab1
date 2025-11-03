@@ -46,8 +46,8 @@ jobs:
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
-    # Deploy only on push to main and when VERCEL_TOKEN is available
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.VERCEL_TOKEN
+    # Deploy only on push to main (secret-check moved into the deploy step)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,6 +61,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Deploy to Vercel
+        if: env.VERCEL_TOKEN != ''
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
