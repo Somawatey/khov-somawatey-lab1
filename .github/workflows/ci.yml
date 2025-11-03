@@ -1,3 +1,4 @@
+ 
 name: Node.js CI (Yarn)
 
 on:
@@ -11,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # express@5 requires Node >= 18 — test against 18 and 20 (current LTS)
         node-version: [18.x, 20.x]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,40 +33,34 @@ jobs:
       - name: Run tests
         run: yarn test
 
-      - name: Run coverage
+      - name: Generate coverage
+        if: github.event_name == 'push'
         run: yarn coverage
 
-      - name: Upload coverage artifact
+      - name: Upload coverage artifact (only once)
+        if: github.event_name == 'push' && matrix.node-version == '25.x'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: |
-            coverage/lcov.info
-            coverage
+          path: coverage/
           overwrite: true
- 
+
   deploy:
+    name: Deploy to Vercel
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25.0.0
         with:
-          node-version: '20.x'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Deploy application to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          echo "Deploying application..."
-          npx --yes vercel --token "$VERCEL_TOKEN" --prod --yes
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod --yes'  # Added --yes to auto-confirm deployment
