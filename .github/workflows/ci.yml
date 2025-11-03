@@ -61,8 +61,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Deploy application
+      - name: Deploy application to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          # Add your deployment commands here
           echo "Deploying application..."
           npx --yes vercel --token "$VERCEL_TOKEN" --prod --yes
