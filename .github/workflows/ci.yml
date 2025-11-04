@@ -38,11 +38,13 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          # make artifact name unique per matrix job to avoid 409 conflict
+          name: coverage-report-${{ matrix.node-version }}-${{ github.run_id }}
           path: |
             coverage/lcov.info
             coverage
           overwrite: true
+          if-no-files-found: warn
 
   deploy:
     needs: build-and-test
